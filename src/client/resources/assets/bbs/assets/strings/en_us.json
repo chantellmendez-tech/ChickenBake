@@ -117,6 +117,8 @@
     "bbs.config.model_blocks.gizmos_enabled-comment": "Enable 3D gizmos (move/rotate/scale) in the model block editor",
     "bbs.config.model_blocks.gizmos_scale": "Gizmo scale",
     "bbs.config.model_blocks.gizmos_scale-comment": "Adjust overall gizmo size (distance does not change it)",
+    "bbs.config.model_blocks.gizmos_thickness": "Gizmo thickness",
+    "bbs.config.model_blocks.gizmos_thickness-comment": "Adjust bar/ring thickness independently from overall size",
     "bbs.config.model_blocks.categories_panel_enabled": "Bone categories panel",
     "bbs.config.model_blocks.categories_panel_enabled-comment": "Show bone categories panel in pose editors (editor and timeline)",
     "bbs.config.multiskin.multithreaded": "Multi-threaded processing",
