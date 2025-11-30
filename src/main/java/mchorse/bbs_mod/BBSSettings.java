@@ -92,6 +92,8 @@ public class BBSSettings
     public static ValueBoolean modelBlockGizmosEnabled;
     /** Escala global para el gizmo 3D (anula el autoescalado por distancia) */
     public static ValueFloat modelBlockGizmoScale;
+    /** Escala de grosor para el gizmo 3D (ancho/barras/anillos) */
+    public static ValueFloat modelBlockGizmoThickness;
     /** Mostrar/ocultar el panel de categorías de huesos en editores de pose */
     public static ValueBoolean modelBlockCategoriesPanelEnabled;
     public static ValueBoolean visualizeStructures;
@@ -239,6 +241,7 @@ public class BBSSettings
         /* Enable gizmos by default to make them visible in editor */
         modelBlockGizmosEnabled = builder.getBoolean("gizmos_enabled", false);
         modelBlockGizmoScale = builder.getFloat("gizmos_scale", 1F, 0.1F, 4F);
+        modelBlockGizmoThickness = builder.getFloat("gizmos_thickness", 1F, 0.35F, 2F);
         /* Panel de categorías en editores de pose (afecta editor y timeline) */
         modelBlockCategoriesPanelEnabled = builder.getBoolean("categories_panel_enabled", false);
 

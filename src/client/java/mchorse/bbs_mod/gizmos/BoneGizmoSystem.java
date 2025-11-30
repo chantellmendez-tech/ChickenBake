@@ -20,7 +20,10 @@ import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.math.MathHelper;
 import org.joml.Matrix4f;
+import org.joml.Matrix3f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
@@ -73,6 +76,8 @@ public class BoneGizmoSystem
 
     /* Escala configurable del gizmo (constante, controlada por settings) */
     private float gizmoScale = 1F;
+    /* Escala configurable del grosor del gizmo (anillos/barras) */
+    private float gizmoThicknessScale = 1F;
 
     /* Soporte de "mouse en bucle" durante el arrastre (como en UIPropTransform) */
     private static final double[] CURSOR_X = new double[1];
@@ -147,7 +152,9 @@ public class BoneGizmoSystem
         {
             this.dragging = true;
             this.activeAxis = this.hoveredAxis;
-        this.activeSubMode = (this.mode == Mode.UNIVERSAL) ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.ROTATE) : this.mode;
+            this.activeSubMode = (this.mode == Mode.UNIVERSAL)
+                ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.ROTATE)
+                : this.mode;
             this.activePlane = this.hoveredPlane;
             this.dragStartX = input.mouseX;
             this.dragStartY = input.mouseY;
@@ -282,7 +289,9 @@ public class BoneGizmoSystem
 
             Transform t = this.target.getTransform();
 
-        Mode op = (this.mode == Mode.UNIVERSAL) ? (this.activeSubMode != null ? this.activeSubMode : Mode.ROTATE) : this.mode;
+            Mode op = (this.mode == Mode.UNIVERSAL)
+                ? (this.activeSubMode != null ? this.activeSubMode : Mode.ROTATE)
+                : this.mode;
 
             if (op == Mode.TRANSLATE)
             {
@@ -427,6 +436,7 @@ public class BoneGizmoSystem
 
                 /* Escala fija controlada por settings (sin autoescalado por distancia) */
                 this.gizmoScale = clampScale(BBSSettings.modelBlockGizmoScale.get());
+                this.gizmoThicknessScale = clampScale(BBSSettings.modelBlockGizmoThickness.get());
 
                 // Iniciar/terminar arrastre basado en 3D hover
                 boolean mouseDown = Window.isMouseButtonPressed(GLFW.GLFW_MOUSE_BUTTON_LEFT);
@@ -434,7 +444,9 @@ public class BoneGizmoSystem
                 {
                     this.dragging = true;
                     this.activeAxis = this.hoveredAxis;
-        this.activeSubMode = (this.mode == Mode.UNIVERSAL) ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.ROTATE) : this.mode;
+                    this.activeSubMode = (this.mode == Mode.UNIVERSAL)
+                        ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.ROTATE)
+                        : this.mode;
                     this.activePlane = this.hoveredPlane;
                     this.dragStartX = input.mouseX;
                     this.dragStartY = input.mouseY;
@@ -722,7 +734,7 @@ public class BoneGizmoSystem
 
                 org.joml.Vector4f dx = new org.joml.Vector4f(axisLen, 0, 0, useLocal ? 0 : 0);
                 org.joml.Vector4f dy = new org.joml.Vector4f(0, axisLen, 0, useLocal ? 0 : 0);
-        org.joml.Vector4f dz = new org.joml.Vector4f(0, 0, axisLen, useLocal ? 0 : 0);
+                org.joml.Vector4f dz = new org.joml.Vector4f(0, 0, axisLen, useLocal ? 0 : 0);
 
                 if (useLocal)
                 {
@@ -741,7 +753,7 @@ public class BoneGizmoSystem
                     // Global: sumar los ejes del mundo al origen
                     dx.x = p0World.x + axisLen; dx.y = p0World.y;            dx.z = p0World.z;            dx.w = 1;
                     dy.x = p0World.x;            dy.y = p0World.y + axisLen; dy.z = p0World.z;            dy.w = 1;
-        dz.x = p0World.x;            dz.y = p0World.y;            dz.z = p0World.z + axisLen; dz.w = 1;
+                    dz.x = p0World.x;            dz.y = p0World.y;            dz.z = p0World.z + axisLen; dz.w = 1;
                 }
 
                 // Proyectar a pantalla
@@ -1052,14 +1064,14 @@ public class BoneGizmoSystem
 
         float baseLength = 0.22F;
         float length = baseLength * this.gizmoScale;     // longitud de cada eje
-        float thickness = 0.012F * this.gizmoScale;      // grosor de barras más delgadas
-        float slabThick = 0.012F * this.gizmoScale;      // losas más delgadas para escala
+        float thickness = 0.009F * this.gizmoScale * this.gizmoThicknessScale;      // barras aún más delgadas
+        float slabThick = 0.009F * this.gizmoScale * this.gizmoThicknessScale;      // losas más delgadas para escala
 
         // Ajuste dinámico para asegurar que la barra toque el cubo en el extremo.
         // Usamos el tamaño del cubo del extremo + el grosor de la barra para
         // evitar gaps en perspectiva o por redondeos.
-        float cubeSmall = 0.018F * this.gizmoScale;
-        float cubeBig = 0.035F * this.gizmoScale;
+        float cubeSmall = 0.016F * this.gizmoScale;
+        float cubeBig = 0.030F * this.gizmoScale;
         // Ajuste por modo: en TRANSLATE conectamos a la base de la flecha;
         // en SCALE nos internamos en el cubo para evitar gaps visuales.
         float connectFudge = (this.mode == Mode.TRANSLATE)
@@ -1098,11 +1110,11 @@ public class BoneGizmoSystem
         if (this.mode == Mode.TRANSLATE || this.mode == Mode.PIVOT)
         {
             // Conos en las puntas de cada eje (estilo DCCs)
-            float headLen = 0.06F * this.gizmoScale;       // altura del cono más delgado
-            float headWidth = 0.045F * this.gizmoScale;    // diámetro aproximado de la base
+            float headLen = 0.055F * this.gizmoScale;       // altura del cono más delgado
+            float headWidth = 0.038F * this.gizmoScale * this.gizmoThicknessScale;    // diámetro aproximado de la base
             float headRadius = headWidth * 0.5F;
             // Radio de esfera para modo PIVOT (ligeramente más pequeño por petición)
-            float sphereR = 0.045F * this.gizmoScale;
+            float sphereR = 0.045F * this.gizmoScale * this.gizmoThicknessScale;
 
             // Igualar longitud visual de barras con ESCALAR y ajustar conos al nuevo extremo
             float lengthBar = length + connectFudge;   // mismo alcance visual que SCALE
@@ -1250,9 +1262,9 @@ public class BoneGizmoSystem
             boolean hy = this.dragging ? (this.activeAxis == Axis.Y) : (this.hoveredAxis == Axis.Y);
             boolean hz = this.dragging ? (this.activeAxis == Axis.Z) : (this.hoveredAxis == Axis.Z);
 
-            float lengthBar = 0.25F + 0.03F;
-            float headLen = 0.08F;
-            float headRadius = 0.03F;
+            float lengthBar = 0.25F + 0.05F;
+            float headLen = 0.07F;
+            float headRadius = 0.028F;
 
             float txX = hx ? thickness * 1.5F : thickness;
             float txY = hy ? thickness * 1.5F : thickness;
@@ -1303,16 +1315,23 @@ public class BoneGizmoSystem
             }
 
             // Anillos de rotación — iguales al gizmo de ROTATE
+            float radius = 0.22F * this.gizmoScale;
+            float thicknessRing = 0.008F * this.gizmoScale * this.gizmoThicknessScale;
             if (usingSub == null || usingSub == Mode.ROTATE)
             {
-                float radius = 0.22F; float thicknessRing = 0.01F; float sweep = 360F;
+                float sweep = 180F;
                 RenderSystem.disableCull();
-                drawEndCube(builder, stack, 0, 0, 0, 0.022F, 1F, 1F, 1F);
-                if (showZ) { drawRingArc3D(builder, stack, 'Z', radius, thicknessRing, 0F, 0F, 1F, 0F, sweep, hz); }
-                if (showX) { drawRingArc3D(builder, stack, 'X', radius, thicknessRing, 1F, 0F, 0F, 0F, sweep, hx); }
-                if (showY) { drawRingArc3D(builder, stack, 'Y', radius, thicknessRing, 0F, 1F, 0F, 0F, sweep, hy); }
+                drawEndCube(builder, stack, 0, 0, 0, 0.02F * this.gizmoThicknessScale, 1F, 1F, 1F);
+                float startZ = computeFrontArcStart(stack, 'Z');
+                float startX = computeFrontArcStart(stack, 'X');
+                float startY = computeFrontArcStart(stack, 'Y');
+                if (showZ) { drawRingArc3D(builder, stack, 'Z', radius, thicknessRing, 0F, 0F, 1F, startZ, sweep, hz); }
+                if (showX) { drawRingArc3D(builder, stack, 'X', radius, thicknessRing, 1F, 0F, 0F, startX, sweep, hx); }
+                if (showY) { drawRingArc3D(builder, stack, 'Y', radius, thicknessRing, 0F, 1F, 0F, startY, sweep, hy); }
                 RenderSystem.enableCull();
             }
+
+            drawOutsideTranslateArrows(builder, stack, showX, showY, showZ, hx, hy, hz, radius, thicknessRing, thickness);
 
             // Losas planas (UNIVERSAL): mismos offsets que TRANSLATE
             // Planos de traslación omitidos: combinación limpia de escala y rotación
@@ -1320,10 +1339,10 @@ public class BoneGizmoSystem
         else if (this.mode == Mode.ROTATE)
         {
             float radius = 0.22F * this.gizmoScale;
-            float sweep = 360F;
             float offZ = 0F;
             float offX = 0F;
             float offY = 0F;
+            float ringThickness = 0.008F * this.gizmoScale * this.gizmoThicknessScale;
             float ringThickness = 0.01F * this.gizmoScale;
 
             boolean hx = (this.hoveredAxis == Axis.X);
@@ -1336,9 +1355,14 @@ public class BoneGizmoSystem
             /* Cubo de pivote como referencia visual */
             drawEndCube(builder, stack, 0, 0, 0, cubeSmall, 1F, 1F, 1F);
 
-            // Anillos alrededor del pivote (Z, X, Y), ocultando los no activos durante arrastre
+            // Anillos alrededor del pivote (Z, X, Y) mostrando solo la mitad frontal
+            float startZ = computeFrontArcStart(stack, 'Z');
+            float startX = computeFrontArcStart(stack, 'X');
+            float startY = computeFrontArcStart(stack, 'Y');
+
             if (showZ)
             {
+                drawRingArc3D(builder, stack, 'Z', radius, ringThickness, 0F, 0F, 1F, offZ + startZ, 180F, hz);
                 drawRingArc3D(builder, stack, 'Z', radius, ringThickness, 0F, 0F, 1F, offZ, sweep, hz);
             }
             if (showX)
@@ -1358,19 +1382,14 @@ public class BoneGizmoSystem
 
             if (showX)
             {
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, insetBarEnd, 0, 0, thickness, 1F, 0F, 0F, 1F);
-                drawCone3D(builder, stack, 'X', insetLength, insetHeadLen, insetHeadRadius, 1F, 0F, 0F, 1F);
+                drawRingArc3D(builder, stack, 'X', radius, ringThickness, 1F, 0F, 0F, offX + startX, 180F, hx);
             }
             if (showY)
             {
-                Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, insetBarEnd, 0, thickness, 0F, 1F, 0F, 1F);
-                drawCone3D(builder, stack, 'Y', insetLength, insetHeadLen, insetHeadRadius, 0F, 1F, 0F, 1F);
+                drawRingArc3D(builder, stack, 'Y', radius, ringThickness, 0F, 1F, 0F, offY + startY, 180F, hy);
             }
-            if (showZ)
-            {
-                Draw.fillBox(builder, stack, -thickness / 2F, -thickness / 2F, 0F, thickness / 2F, thickness / 2F, insetBarEnd, 0F, 0F, 1F, 1F);
-                drawCone3D(builder, stack, 'Z', insetLength, insetHeadLen, insetHeadRadius, 0F, 0F, 1F, 1F);
-            }
+
+            drawOutsideTranslateArrows(builder, stack, showX, showY, showZ, hx, hy, hz, radius, ringThickness, thickness);
         }
 
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
@@ -1386,12 +1405,83 @@ public class BoneGizmoSystem
         // depende únicamente de la matriz de origen aplicada antes de esta llamada.
     }
 
+    private void drawOutsideTranslateArrows(BufferBuilder builder, MatrixStack stack, boolean showX, boolean showY, boolean showZ,
+        boolean hx, boolean hy, boolean hz, float ringRadius, float ringThickness, float barThickness)
+    {
+        float start = getOutsideArrowStart(ringRadius, ringThickness);
+        float arrowLength = getOutsideArrowTotalLength();
+        float headLen = getOutsideArrowHeadLength();
+        float headRadius = getOutsideArrowHeadRadius();
+        float barEnd = Math.max(0F, arrowLength - headLen - (0.002F * this.gizmoScale));
+
+        float txX = hx ? barThickness * 1.5F : barThickness;
+        float txY = hy ? barThickness * 1.5F : barThickness;
+        float txZ = hz ? barThickness * 1.5F : barThickness;
+
+        if (showX)
+        {
+            stack.push();
+            stack.translate(start, 0F, 0F);
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, barEnd, 0, 0, txX, 1F, 0F, 0F, 1F);
+            drawCone3D(builder, stack, 'X', arrowLength, headLen, headRadius, 1F, 0F, 0F, 1F);
+            stack.pop();
+        }
+        if (showY)
+        {
+            stack.push();
+            stack.translate(0F, start, 0F);
+            Draw.fillBoxTo(builder, stack, 0, 0, 0, 0, barEnd, 0, txY, 0F, 1F, 0F, 1F);
+            drawCone3D(builder, stack, 'Y', arrowLength, headLen, headRadius, 0F, 1F, 0F, 1F);
+            stack.pop();
+        }
+        if (showZ)
+        {
+            stack.push();
+            stack.translate(0F, 0F, start);
+            Draw.fillBox(builder, stack, -txZ / 2F, -txZ / 2F, 0F, txZ / 2F, txZ / 2F, barEnd, 0F, 0F, 1F, 1F);
+            drawCone3D(builder, stack, 'Z', arrowLength, headLen, headRadius, 0F, 0F, 1F, 1F);
+            stack.pop();
+        }
+    }
+
     private void drawEndCube(BufferBuilder builder, MatrixStack stack, float x, float y, float z, float s, float r, float g, float b)
     {
         stack.push();
         stack.translate(x, y, z);
         Draw.fillBox(builder, stack, -s, -s, -s, s, s, s, r, g, b, 1F);
         stack.pop();
+    }
+
+    private float computeFrontArcStart(MatrixStack stack, char axis)
+    {
+        var camera = MinecraftClient.getInstance().gameRenderer.getCamera();
+        Vector3f viewDir = new Vector3f((float) camera.getRotationVector().x, (float) camera.getRotationVector().y, (float) camera.getRotationVector().z);
+
+        Matrix3f normal = new Matrix3f(stack.peek().getNormalMatrix());
+        normal.invert();
+        normal.transform(viewDir);
+
+        Vector2f proj;
+        switch (axis)
+        {
+            case 'Z' -> proj = new Vector2f(viewDir.x, viewDir.y);
+            case 'X' -> proj = new Vector2f(viewDir.y, viewDir.z);
+            default -> proj = new Vector2f(viewDir.x, viewDir.z);
+        }
+
+        if (proj.lengthSquared() < 1e-6F)
+        {
+            float fallback = switch (axis)
+            {
+                case 'Z' -> viewDir.z;
+                case 'X' -> viewDir.x;
+                default -> viewDir.y;
+            };
+            return fallback >= 0 ? -90F : 90F;
+        }
+
+        float angle = (float) Math.toDegrees(Math.atan2(proj.y, proj.x));
+        return MathHelper.wrapDegrees(angle - 90F);
     }
 
     /**
@@ -1734,6 +1824,18 @@ public class BoneGizmoSystem
         }
     }
 
+    private static class AxisHit
+    {
+        Axis axis;
+        float t;
+
+        AxisHit(Axis axis, float t)
+        {
+            this.axis = axis;
+            this.t = t;
+        }
+    }
+
     /**
      * Detección de eje hovered en 3D usando ray casting hacia cajas alineadas por eje.
      */
@@ -1769,86 +1871,153 @@ public class BoneGizmoSystem
         // la rotación acumulada del hueso). No aplicamos rotaciones adicionales
         // del transform local para evitar discrepancias entre render y picking.
 
-        // Si estamos en rotación, priorizar el anillo y permitir selección por barras delgadas
+        // Si estamos en rotación, priorizar el impacto más cercano entre anillos y barras
         if (this.mode == Mode.ROTATE)
         {
-            Axis ring = detectHoveredAxis3DRotate(rayO, rayD);
-            if (ring != null)
-            {
-                return ring;
-            }
+            float ringRadius = 0.22F * this.gizmoScale;
+            float ringThickness = 0.008F * this.gizmoScale * this.gizmoThicknessScale;
+            AxisHit bars = detectOutsideTranslateHit(rayO, rayD, ringRadius, ringThickness);
+            AxisHit ring = detectHoveredAxis3DRotate(rayO, rayD);
 
-            return detectAxisFromBars(rayO, rayD, 0.22F * this.gizmoScale, 0.02F * this.gizmoScale, 0.10F * this.gizmoScale);
+            AxisHit best = chooseNearestHit(bars, ring);
+            return best != null ? best.axis : null;
         }
 
         if (this.mode == Mode.UNIVERSAL)
         {
+            float ringRadius = 0.22F * this.gizmoScale;
+            float ringThickness = 0.008F * this.gizmoScale * this.gizmoThicknessScale;
+
             // Priorizar anillos de rotación
-            Axis rot = detectHoveredAxis3DRotate(rayO, rayD);
-            if (rot != null) { this.hoveredSubMode = Mode.ROTATE; this.hoveredPlane = null; return rot; }
+            AxisHit rot = detectHoveredAxis3DRotate(rayO, rayD);
+            AxisHit bars = detectOutsideTranslateHit(rayO, rayD, ringRadius, ringThickness);
 
             // Solo los cubos de escala al final de cada eje
             float len = 0.22F * this.gizmoScale;
             float cube = 0.035F * this.gizmoScale;
-            float bar = 0.02F * this.gizmoScale;
+            float bar = 0.02F * this.gizmoScale * this.gizmoThicknessScale;
             float[] txS = rayBoxIntersect(rayO, rayD, new Vector3f(len - bar, -cube, -cube), new Vector3f(len + bar, cube, cube));
             float[] tyS = rayBoxIntersect(rayO, rayD, new Vector3f(-cube, len - bar, -cube), new Vector3f(cube, len + bar, cube));
             float[] tzS = rayBoxIntersect(rayO, rayD, new Vector3f(-cube, -cube, len - bar), new Vector3f(cube, cube, len + bar));
 
-            float bt = Float.POSITIVE_INFINITY; Axis ba = null;
-            if (txS != null && txS[0] >= 0 && txS[0] < bt) { bt = txS[0]; ba = Axis.X; }
-            if (tyS != null && tyS[0] >= 0 && tyS[0] < bt) { bt = tyS[0]; ba = Axis.Y; }
-            if (tzS != null && tzS[0] >= 0 && tzS[0] < bt) { bt = tzS[0]; ba = Axis.Z; }
-            if (ba != null) { this.hoveredSubMode = Mode.SCALE; this.hoveredPlane = null; return ba; }
+            AxisHit scaleHit = null;
+            if (txS != null && txS[0] >= 0) scaleHit = new AxisHit(Axis.X, txS[0]);
+            if (tyS != null && tyS[0] >= 0 && (scaleHit == null || tyS[0] < scaleHit.t)) scaleHit = new AxisHit(Axis.Y, tyS[0]);
+            if (tzS != null && tzS[0] >= 0 && (scaleHit == null || tzS[0] < scaleHit.t)) scaleHit = new AxisHit(Axis.Z, tzS[0]);
 
-            this.hoveredSubMode = null; this.hoveredPlane = null; return null;
+            AxisHit best = chooseNearestHit(scaleHit, chooseNearestHit(rot, bars));
+            if (best == null)
+            {
+                this.hoveredSubMode = null; this.hoveredPlane = null; return null;
+            }
+
+            if (best == rot)
+            {
+                this.hoveredSubMode = Mode.ROTATE; this.hoveredPlane = null; return rot.axis;
+            }
+            else if (best == bars)
+            {
+                this.hoveredSubMode = Mode.TRANSLATE; this.hoveredPlane = null; return bars.axis;
+            }
+            else
+            {
+                this.hoveredSubMode = Mode.SCALE; this.hoveredPlane = null; return best.axis;
+            }
         }
 
         // Definir AABB por eje (mover/escalar)
         return detectAxisFromBars(rayO, rayD, 0.22F * this.gizmoScale,
-                ((this.mode == Mode.SCALE) ? 0.04F : 0.02F) * this.gizmoScale,
+                ((this.mode == Mode.SCALE) ? 0.04F : 0.02F) * this.gizmoScale * this.gizmoThicknessScale,
                 ((this.mode == Mode.TRANSLATE) || (this.mode == Mode.PIVOT)) ? 0.10F * this.gizmoScale : 0.04F * this.gizmoScale);
     }
 
     private Axis detectAxisFromBars(Vector3f rayO, Vector3f rayD, float length, float thickness, float fudge)
+    {
+        AxisHit hit = detectAxisFromBarsHit(rayO, rayD, length, thickness, fudge);
+        return hit != null ? hit.axis : null;
+    }
+
+    private AxisHit detectAxisFromBarsHit(Vector3f rayO, Vector3f rayD, float length, float thickness, float fudge)
     {
         float half = thickness / 2F;
         float[] tx = rayBoxIntersect(rayO, rayD, new Vector3f(0F, -half, -half), new Vector3f(length + fudge, half, half));
         float[] ty = rayBoxIntersect(rayO, rayD, new Vector3f(-half, 0F, -half), new Vector3f(half, length + fudge, half));
         float[] tz = rayBoxIntersect(rayO, rayD, new Vector3f(-half, -half, 0F), new Vector3f(half, half, length + fudge));
 
-        float bestT = Float.POSITIVE_INFINITY;
-        Axis best = null;
+        AxisHit best = null;
 
-        if (tx != null && tx[0] >= 0 && tx[0] < bestT) { bestT = tx[0]; best = Axis.X; }
-        if (ty != null && ty[0] >= 0 && ty[0] < bestT) { bestT = ty[0]; best = Axis.Y; }
-        if (tz != null && tz[0] >= 0 && tz[0] < bestT) { bestT = tz[0]; best = Axis.Z; }
+        if (tx != null && tx[0] >= 0) { best = new AxisHit(Axis.X, tx[0]); }
+        if (ty != null && ty[0] >= 0 && (best == null || ty[0] < best.t)) { best = new AxisHit(Axis.Y, ty[0]); }
+        if (tz != null && tz[0] >= 0 && (best == null || tz[0] < best.t)) { best = new AxisHit(Axis.Z, tz[0]); }
 
         return best;
     }
 
+    private AxisHit detectAxisFromOffsetBarsHit(Vector3f rayO, Vector3f rayD, float start, float length, float thickness, float fudge)
+    {
+        float half = thickness / 2F;
+        float end = start + length;
+
+        float[] tx = rayBoxIntersect(rayO, rayD, new Vector3f(start - fudge, -half, -half), new Vector3f(end + fudge, half, half));
+        float[] ty = rayBoxIntersect(rayO, rayD, new Vector3f(-half, start - fudge, -half), new Vector3f(half, end + fudge, half));
+        float[] tz = rayBoxIntersect(rayO, rayD, new Vector3f(-half, -half, start - fudge), new Vector3f(half, half, end + fudge));
+
+        AxisHit best = null;
+
+        if (tx != null && tx[0] >= 0) { best = new AxisHit(Axis.X, tx[0]); }
+        if (ty != null && ty[0] >= 0 && (best == null || ty[0] < best.t)) { best = new AxisHit(Axis.Y, ty[0]); }
+        if (tz != null && tz[0] >= 0 && (best == null || tz[0] < best.t)) { best = new AxisHit(Axis.Z, tz[0]); }
+
+        return best;
+    }
+
+    private AxisHit detectOutsideTranslateHit(Vector3f rayO, Vector3f rayD, float ringRadius, float ringThickness)
+    {
+        float start = getOutsideArrowStart(ringRadius, ringThickness);
+        float length = getOutsideArrowTotalLength();
+        float thickness = 0.018F * this.gizmoScale * this.gizmoThicknessScale;
+        float fudge = getOutsideArrowHeadLength() + 0.01F * this.gizmoScale;
+
+        return detectAxisFromOffsetBarsHit(rayO, rayD, start, length, thickness, fudge);
+    }
+
+    private float getOutsideArrowStart(float ringRadius, float ringThickness)
+    {
+        return ringRadius + (ringThickness * 0.5F) + (0.01F * this.gizmoScale);
+    }
+
+    private float getOutsideArrowTotalLength()
+    {
+        return 0.12F * this.gizmoScale;
+    }
+
+    private float getOutsideArrowHeadLength()
+    {
+        return 0.06F * this.gizmoScale;
+    }
+
+    private float getOutsideArrowHeadRadius()
+    {
+        return 0.022F * this.gizmoScale * this.gizmoThicknessScale;
+    }
+
     /** Picking 3D para el gizmo de rotación: intersección rayo-plano y banda alrededor del radio. */
-    private Axis detectHoveredAxis3DRotate(Vector3f rayO, Vector3f rayD)
+    private AxisHit detectHoveredAxis3DRotate(Vector3f rayO, Vector3f rayD)
     {
         float radius = 0.22F * this.gizmoScale;
-        // Grosor coherente con el render
-        float baseThickness = 0.01F * this.gizmoScale;
-        float thickness = baseThickness;        // ancho visual del anillo
-        float band = thickness * 0.75F + (0.002F * this.gizmoScale); // cubrir todo el color del anillo
+        float baseThickness = 0.008F * this.gizmoScale * this.gizmoThicknessScale;
+        float thickness = baseThickness;
+        float band = thickness * 0.75F + (0.002F * this.gizmoScale);
 
-        class Hit { Axis a; float t; }
-        Hit hitBest = null;
+        AxisHit hitBest = null;
 
-        // Comprobación auxiliar
-        java.util.function.BiFunction<Vector3f, Character, Hit> check = (n, c) -> {
+        java.util.function.BiFunction<Vector3f, Character, AxisHit> check = (n, c) -> {
             float denom = n.x * rayD.x + n.y * rayD.y + n.z * rayD.z;
             float t;
             float ix, iy, iz;
 
             if (Math.abs(denom) < 1e-5)
             {
-                // Fallback: resolver intersección del rayo con el círculo del anillo
-                // en el par de ejes correspondiente mediante ecuación cuadrática.
                 float ax, ay, dx, dy;
                 if (c == 'Z') { ax = rayO.x; ay = rayO.y; dx = rayD.x; dy = rayD.y; }
                 else if (c == 'X') { ax = rayO.y; ay = rayO.z; dx = rayD.y; dy = rayD.z; }
@@ -1863,7 +2032,6 @@ public class BoneGizmoSystem
                     float sqrt = (float) Math.sqrt(disc);
                     float t1 = (-B - sqrt) / (2F * A);
                     float t2 = (-B + sqrt) / (2F * A);
-                    // Elegir el menor t positivo (frente del rayo)
                     t = Float.POSITIVE_INFINITY;
                     if (t1 >= 0F) t = Math.min(t, t1);
                     if (t2 >= 0F) t = Math.min(t, t2);
@@ -1880,7 +2048,6 @@ public class BoneGizmoSystem
             }
             else
             {
-                // Intersección clásica rayo-plano (plano pasa por origen)
                 t = - (n.x * rayO.x + n.y * rayO.y + n.z * rayO.z) / denom;
                 if (t < 0) return null;
                 ix = rayO.x + rayD.x * t;
@@ -1888,7 +2055,6 @@ public class BoneGizmoSystem
                 iz = rayO.z + rayD.z * t;
             }
 
-            // distancia radial en el plano correspondiente
             float radial;
             if (c == 'Z') { radial = (float) Math.sqrt(ix * ix + iy * iy); }
             else if (c == 'X') { radial = (float) Math.sqrt(iy * iy + iz * iz); }
@@ -1896,25 +2062,29 @@ public class BoneGizmoSystem
 
             if (radial >= (radius - band) && radial <= (radius + band))
             {
-                Hit h = new Hit();
-                h.a = (c == 'Z') ? Axis.Z : (c == 'X') ? Axis.X : Axis.Y;
-                h.t = t;
-                return h;
+                return new AxisHit((c == 'Z') ? Axis.Z : (c == 'X') ? Axis.X : Axis.Y, t);
             }
             return null;
         };
 
-        Hit hz = check.apply(new Vector3f(0F, 0F, 1F), 'Z');
-        Hit hx = check.apply(new Vector3f(1F, 0F, 0F), 'X');
-        Hit hy = check.apply(new Vector3f(0F, 1F, 0F), 'Y');
+        AxisHit hz = check.apply(new Vector3f(0F, 0F, 1F), 'Z');
+        AxisHit hx = check.apply(new Vector3f(1F, 0F, 0F), 'X');
+        AxisHit hy = check.apply(new Vector3f(0F, 1F, 0F), 'Y');
 
-        Hit[] all = new Hit[] { hz, hx, hy };
-        for (Hit h : all)
+        AxisHit[] all = new AxisHit[] { hz, hx, hy };
+        for (AxisHit h : all)
         {
             if (h == null) continue;
             if (hitBest == null || h.t < hitBest.t) hitBest = h;
         }
-        return hitBest == null ? null : hitBest.a;
+        return hitBest;
+    }
+
+    private AxisHit chooseNearestHit(AxisHit a, AxisHit b)
+    {
+        if (a == null) return b;
+        if (b == null) return a;
+        return (a.t <= b.t) ? a : b;
     }
 
     private boolean angleInArc(float angDeg, float startDeg, float sweepDeg)
