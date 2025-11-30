@@ -152,7 +152,9 @@ public class BoneGizmoSystem
         {
             this.dragging = true;
             this.activeAxis = this.hoveredAxis;
-        this.activeSubMode = (this.mode == Mode.UNIVERSAL) ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.ROTATE) : this.mode;
+            this.activeSubMode = (this.mode == Mode.UNIVERSAL)
+                ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.ROTATE)
+                : this.mode;
             this.activePlane = this.hoveredPlane;
             this.dragStartX = input.mouseX;
             this.dragStartY = input.mouseY;
@@ -287,7 +289,9 @@ public class BoneGizmoSystem
 
             Transform t = this.target.getTransform();
 
-        Mode op = (this.mode == Mode.UNIVERSAL) ? (this.activeSubMode != null ? this.activeSubMode : Mode.ROTATE) : this.mode;
+            Mode op = (this.mode == Mode.UNIVERSAL)
+                ? (this.activeSubMode != null ? this.activeSubMode : Mode.ROTATE)
+                : this.mode;
 
             if (op == Mode.TRANSLATE)
             {
@@ -440,7 +444,9 @@ public class BoneGizmoSystem
                 {
                     this.dragging = true;
                     this.activeAxis = this.hoveredAxis;
-        this.activeSubMode = (this.mode == Mode.UNIVERSAL) ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.ROTATE) : this.mode;
+                    this.activeSubMode = (this.mode == Mode.UNIVERSAL)
+                        ? (this.hoveredSubMode != null ? this.hoveredSubMode : Mode.ROTATE)
+                        : this.mode;
                     this.activePlane = this.hoveredPlane;
                     this.dragStartX = input.mouseX;
                     this.dragStartY = input.mouseY;
@@ -728,7 +734,7 @@ public class BoneGizmoSystem
 
                 org.joml.Vector4f dx = new org.joml.Vector4f(axisLen, 0, 0, useLocal ? 0 : 0);
                 org.joml.Vector4f dy = new org.joml.Vector4f(0, axisLen, 0, useLocal ? 0 : 0);
-        org.joml.Vector4f dz = new org.joml.Vector4f(0, 0, axisLen, useLocal ? 0 : 0);
+                org.joml.Vector4f dz = new org.joml.Vector4f(0, 0, axisLen, useLocal ? 0 : 0);
 
                 if (useLocal)
                 {
@@ -747,7 +753,7 @@ public class BoneGizmoSystem
                     // Global: sumar los ejes del mundo al origen
                     dx.x = p0World.x + axisLen; dx.y = p0World.y;            dx.z = p0World.z;            dx.w = 1;
                     dy.x = p0World.x;            dy.y = p0World.y + axisLen; dy.z = p0World.z;            dy.w = 1;
-        dz.x = p0World.x;            dz.y = p0World.y;            dz.z = p0World.z + axisLen; dz.w = 1;
+                    dz.x = p0World.x;            dz.y = p0World.y;            dz.z = p0World.z + axisLen; dz.w = 1;
                 }
 
                 // Proyectar a pantalla
