@@ -1343,6 +1343,7 @@ public class BoneGizmoSystem
             float offX = 0F;
             float offY = 0F;
             float ringThickness = 0.008F * this.gizmoScale * this.gizmoThicknessScale;
+            float ringThickness = 0.01F * this.gizmoScale;
 
             boolean hx = (this.hoveredAxis == Axis.X);
             boolean hy = (this.hoveredAxis == Axis.Y);
@@ -1362,7 +1363,23 @@ public class BoneGizmoSystem
             if (showZ)
             {
                 drawRingArc3D(builder, stack, 'Z', radius, ringThickness, 0F, 0F, 1F, offZ + startZ, 180F, hz);
+                drawRingArc3D(builder, stack, 'Z', radius, ringThickness, 0F, 0F, 1F, offZ, sweep, hz);
             }
+            if (showX)
+            {
+                drawRingArc3D(builder, stack, 'X', radius, ringThickness, 1F, 0F, 0F, offX, sweep, hx);
+            }
+            if (showY)
+            {
+                drawRingArc3D(builder, stack, 'Y', radius, ringThickness, 0F, 1F, 0F, offY, sweep, hy);
+            }
+
+            /* Ejes de traslación superpuestos dentro del anillo para facilitar el agarre */
+            float insetLength = 0.16F * this.gizmoScale;
+            float insetHeadLen = 0.05F * this.gizmoScale;
+            float insetHeadRadius = 0.022F * this.gizmoScale;
+            float insetBarEnd = insetLength - insetHeadLen - 0.002F;
+
             if (showX)
             {
                 drawRingArc3D(builder, stack, 'X', radius, ringThickness, 1F, 0F, 0F, offX + startX, 180F, hx);
